@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LessonBook — Private Lesson Studio Book</title>
+<style>
+  :root{
+    --ink:#23202b; --muted:#6f6a7d; --line:#ddd8e6; --bg:#f6f4fa; --card:#ffffff;
+    --brand:#5b4a9e; --brand2:#7a68c4; --good:#1e7a46; --warn:#b45309; --bad:#b3261e;
+    --soft:#efeaf9; --soft2:#f3f0fa;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+  header{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:14px 16px}
+  header h1{margin:0;font-size:21px;letter-spacing:.2px}
+  header p{margin:2px 0 0;font-size:13px;opacity:.92}
+  nav{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  nav button{flex:1 1 auto;min-height:42px;border:1px solid var(--line);background:#fff;border-radius:9px;font-size:14px;cursor:pointer;padding:8px 6px}
+  nav button.active{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600}
+  main{max-width:1060px;margin:0 auto;padding:14px 12px 40px}
+  .view{display:none}
+  .view.active{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+  .card h2{margin:0 0 8px;font-size:17px}
+  .card h3{margin:14px 0 6px;font-size:15px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .stat{background:var(--soft2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .stat b{display:block;font-size:21px}
+  .stat span{font-size:12.5px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}
+  th{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .row-actions{white-space:nowrap}
+  button.btn{min-height:42px;border-radius:9px;border:1px solid var(--brand);background:var(--brand);color:#fff;padding:8px 14px;font-size:14px;cursor:pointer}
+  button.btn.secondary{background:#fff;color:var(--brand)}
+  button.btn.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+  button.btn.small{min-height:34px;padding:4px 10px;font-size:13px;min-height:40px;}
+  button.btn.danger{background:#fff;color:var(--bad);border-color:var(--bad)}
+  label{display:block;font-size:13px;color:var(--muted);margin:8px 0 3px}
+  input,select,textarea{width:100%;min-height:42px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:15px;background:#fff;color:var(--ink)}
+  textarea{min-height:64px;resize:vertical}
+  .formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+  .pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600}
+  .pill.good{background:#e2f3e8;color:var(--good)}
+  .pill.warn{background:#fdf0dc;color:var(--warn)}
+  .pill.bad{background:#fbe7e5;color:var(--bad)}
+  .pill.soft{background:var(--soft);color:var(--brand)}
+  .pill.grey{background:#eee;color:var(--muted)}
+  .muted{color:var(--muted)} .small{font-size:13px}
+  .money-pos{color:var(--bad);font-weight:600}
+  .money-zero{color:var(--good);font-weight:600}
+  .dayblock{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+  .dayblock>h3{margin:0;background:var(--soft2);padding:8px 12px;font-size:14.5px}
+  .lessonrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line)}
+  .lessonrow .who{flex:1 1 190px}
+  .lessonrow select{width:auto;min-height:38px;flex:0 1 170px}
+  .lessonrow input[type=text]{flex:1 1 150px;min-height:38px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+  .toolbar .spacer{flex:1}
+  .notice{background:#fff8e6;border:1px solid #ecd9a0;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+  .err{background:#fbe7e5;border:1px solid #e5b3af;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:14px;display:none}
+  footer{max-width:1060px;margin:0 auto;padding:0 12px 26px;color:var(--muted);font-size:12.5px}
+  #printArea{display:none}
+  @media (max-width:640px){
+    table{font-size:13px}
+    th,td{padding:6px 4px}
+    .lessonrow select{flex:1 1 100%}
+  }
+  @media print{
+    header,nav,main,footer{display:none !important}
+    body{background:#fff}
+    #printArea{display:block !important;font-size:13px;color:#000}
+    #printArea h1{font-size:19px;margin:0 0 2px}
+    #printArea h2{font-size:15px;margin:16px 0 6px;border-bottom:1px solid #999;padding-bottom:3px}
+    #printArea table{font-size:12.5px}
+    #printArea th,#printArea td{border-bottom:1px solid #bbb}
+    .stmt-head{border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎵 LessonBook</h1>
+  <p id="studioLine">Private Lesson Studio Book — roster, make-up credits &amp; tuition, fully offline.</p>
+</header>
+<nav id="tabbar">
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="week">Week Roster</button>
+  <button data-tab="students">Students</button>
+  <button data-tab="credits">Make-Up Credits</button>
+  <button data-tab="money">Tuition &amp; Money</button>
+  <button data-tab="settings">Settings &amp; Help</button>
+</nav>
+<main>
+  <div id="errBox" class="err"></div>
+
+  <section id="view-dashboard" class="view active">
+    <div class="card"><h2>Studio at a glance</h2><div class="grid" id="dashStats"></div></div>
+    <div class="card"><h2>Needs attention</h2><div id="dashAttention"></div></div>
+    <div class="card"><h2>Today &amp; tomorrow</h2><div id="dashSoon"></div></div>
+  </section>
+
+  <section id="view-week" class="view">
+    <div class="card">
+      <div class="toolbar">
+        <button class="btn secondary small" id="wkPrev">← Prev week</button>
+        <button class="btn secondary small" id="wkToday">This week</button>
+        <button class="btn secondary small" id="wkNext">Next week →</button>
+        <span class="spacer"></span>
+        <b id="wkLabel"></b>
+      </div>
+      <div class="toolbar">
+        <button class="btn small" id="wkGenerate">Generate week from roster</button>
+        <span class="small muted">Creates each active student's regular lesson on their usual day. Existing lessons are never duplicated.</span>
+      </div>
+      <div id="weekBody"></div>
+    </div>
+    <div class="card">
+      <h2>Add a one-off lesson</h2>
+      <form id="oneoffForm">
+        <div class="formgrid">
+          <div><label>Student</label><select id="ooStudent" required></select></div>
+          <div><label>Date</label><input type="date" id="ooDate" required></div>
+          <div><label>Time</label><input type="time" id="ooTime"></div>
+          <div><label>Minutes</label><input inputmode="decimal" type="number" id="ooDur" min="5" step="5" value="45"></div>
+        </div>
+        <p style="margin-top:10px"><button class="btn" type="submit">Add lesson</button></p>
+      </form>
+    </div>
+  </section>
+
+  <section id="view-students" class="view">
+    <div class="card">
+      <h2 id="studentFormTitle">Add a student</h2>
+      <form id="studentForm">
+        <input type="hidden" id="stId">
+        <div class="formgrid">
+          <div><label>Student name *</label><input id="stName" required maxlength="80"></div>
+          <div><label>Instrument / subject *</label><input id="stSubject" required maxlength="60" placeholder="Piano, Guitar, Math…"></div>
+          <div><label>Contact (guardian, phone, email)</label><input id="stContact" maxlength="120"></div>
+          <div><label>Billing</label><select id="stBilling"><option value="monthly">Monthly flat tuition</option><option value="perlesson">Per-lesson</option></select></div>
+          <div><label>Rate ($) — monthly tuition or per-lesson price</label><input inputmode="decimal" id="stRate" type="number" min="0" step="0.01" required></div>
+          <div><label>Usual lesson day</label><select id="stDow"></select></div>
+          <div><label>Usual time</label><input id="stTime" type="time" value="16:00"></div>
+          <div><label>Usual minutes</label><input inputmode="decimal" id="stDur" type="number" min="5" step="5" value="45"></div>
+        </div>
+        <div><label>Notes</label><textarea id="stNotes" maxlength="500"></textarea></div>
+        <p style="margin-top:10px">
+          <button class="btn" type="submit">Save student</button>
+          <button class="btn ghost" type="button" id="stCancelEdit" style="display:none">Cancel edit</button>
+        </p>
+      </form>
+    </div>
+    <div class="card"><h2>Students</h2><div id="studentList"></div></div>
+    <div class="card" id="studentDetailCard" style="display:none">
+      <h2 id="detailTitle">Student detail</h2>
+      <div id="studentDetail"></div>
+      <h3>Add a milestone (recital, exam, achievement)</h3>
+      <form id="milestoneForm">
+        <div class="formgrid">
+          <div><label>Date</label><input type="date" id="msDate"></div>
+          <div><label>Milestone *</label><input id="msTitle" required maxlength="100" placeholder="Spring Recital, Grade 3 Exam…"></div>
+          <div><label>Detail</label><input id="msDetail" maxlength="160" placeholder="Passed with merit, performed…"></div>
+        </div>
+        <p style="margin-top:10px"><button class="btn small" type="submit">Add milestone</button>
+        <button class="btn secondary small" type="button" id="detailPrint">🖨️ Print statement / progress report</button></p>
+      </form>
+    </div>
+  </section>
+
+  <section id="view-credits" class="view">
+    <div class="card">
+      <h2>Make-up credits</h2>
+      <p class="small muted">A credit is earned when a regular lesson is cancelled <b>inside your policy</b> or <b>by you (teacher)</b>. Booking a make-up lesson uses the student's oldest available credit. If the make-up itself is cancelled inside policy or by you, the credit comes back; a late cancel or no-show on a make-up uses it up — that's the policy most studios run, and it's stated to families up front.</p>
+      <div class="toolbar"><label style="margin:0">Show</label><select id="creditFilter" style="width:auto;min-height:38px"><option value="all">All credits</option><option value="available">Available</option><option value="used">Used</option><option value="expired">Expired</option></select></div>
+      <div id="creditList"></div>
+    </div>
+    <div class="card">
+      <h2>Book a make-up lesson</h2>
+      <form id="makeupForm">
+        <div class="formgrid">
+          <div><label>Student (with an available credit)</label><select id="mkStudent" required></select></div>
+          <div><label>Date</label><input type="date" id="mkDate" required></div>
+          <div><label>Time</label><input type="time" id="mkTime" value="16:00"></div>
+          <div><label>Minutes</label><input inputmode="decimal" type="number" id="mkDur" min="5" step="5" value="45"></div>
+        </div>
+        <p style="margin-top:10px"><button class="btn" type="submit">Book make-up (uses 1 credit)</button></p>
+        <p class="small muted" id="mkHint"></p>
+      </form>
+    </div>
+  </section>
+
+  <section id="view-money" class="view">
+    <div class="card"><h2>Balances</h2><div id="balanceList"></div></div>
+    <div class="card">
+      <h2>Charge monthly tuition</h2>
+      <div class="toolbar">
+        <input type="month" id="tuitionMonth" style="width:auto">
+        <button class="btn small" id="chargeTuitionBtn">Charge tuition for this month</button>
+        <span class="small muted">Adds one tuition charge per active monthly student. Safe to click twice — a month is never charged twice.</span>
+      </div>
+      <h3>Add a charge (books, recital fee, materials…)</h3>
+      <form id="chargeForm">
+        <div class="formgrid">
+          <div><label>Student</label><select id="chStudent" required></select></div>
+          <div><label>Date</label><input type="date" id="chDate"></div>
+          <div><label>Description *</label><input id="chDesc" required maxlength="100"></div>
+          <div><label>Amount ($) *</label><input inputmode="decimal" id="chAmount" type="number" min="0.01" step="0.01" required></div>
+        </div>
+        <p style="margin-top:10px"><button class="btn small" type="submit">Add charge</button></p>
+      </form>
+      <h3>Record a payment</h3>
+      <form id="paymentForm">
+        <div class="formgrid">
+          <div><label>Student</label><select id="payStudent" required></select></div>
+          <div><label>Date</label><input type="date" id="payDate"></div>
+          <div><label>Amount ($) *</label><input inputmode="decimal" id="payAmount" type="number" min="0.01" step="0.01" required></div>
+          <div><label>Method</label><select id="payMethod"><option>Cash</option><option>Card</option><option>Venmo</option><option>Zelle</option><option>Check</option><option>Other</option></select></div>
+          <div><label>Note</label><input id="payNote" maxlength="80"></div>
+        </div>
+        <p style="margin-top:10px"><button class="btn small" type="submit">Record payment</button></p>
+      </form>
+    </div>
+    <div class="card"><h2>Recent activity</h2><div id="activityList"></div></div>
+  </section>
+
+  <section id="view-settings" class="view">
+    <div class="card">
+      <h2>Studio settings</h2>
+      <form id="settingsForm">
+        <div class="formgrid">
+          <div><label>Studio name</label><input id="setStudio" maxlength="80"></div>
+          <div><label>Teacher name (prints on statements)</label><input id="setTeacher" maxlength="80"></div>
+          <div><label>Cancellation policy — hours of notice for a make-up credit</label><input inputmode="decimal" id="setCancelHours" type="number" min="0" step="1"></div>
+          <div><label>Make-up credits expire after (days)</label><input inputmode="decimal" id="setExpiry" type="number" min="1" step="1"></div>
+        </div>
+        <p style="margin-top:10px"><button class="btn" type="submit">Save settings</button></p>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Backup &amp; data</h2>
+      <p class="small muted">Everything lives in this browser on this device — nothing is uploaded anywhere. Export a backup file regularly and keep it somewhere safe; import it on any device to move your book.</p>
+      <div class="toolbar">
+        <button class="btn secondary small" id="exportBtn">⬇️ Export backup (.json)</button>
+        <label style="margin:0">Import backup <input type="file" id="importFile" accept=".json,application/json" style="min-height:0"></label>
+      </div>
+      <div class="toolbar">
+        <button class="btn ghost small" id="loadDemoBtn">Load demo studio</button>
+        <button class="btn ghost small" id="removeSampleBtn">Remove sample data only</button>
+        <button class="btn danger small" id="clearBtn">Erase everything &amp; start empty</button>
+      </div>
+      <p class="small muted" id="dataMsg"></p>
+    </div>
+    <div class="card">
+      <h2>How LessonBook works</h2>
+      <ul class="small">
+        <li><b>Roster → Week:</b> set each student's usual day/time, then "Generate week from roster" builds the week's lessons in one tap.</li>
+        <li><b>Mark every lesson:</b> Taught, Cancelled — in policy (earns a make-up credit), Cancelled — late / no-show (no credit; per-lesson students are still charged, which is the standard policy), or Cancelled by teacher (earns a credit).</li>
+        <li><b>Credits:</b> expire after the number of days in Settings (default 60). Book make-ups from the Credits tab — the oldest available credit is used first.</li>
+        <li><b>Money:</b> monthly students are charged with the one-tap tuition button; per-lesson students are charged automatically when a payable lesson is marked. Record payments as they arrive — balances and statements stay current.</li>
+        <li><b>Statements:</b> open any student and print a statement / term progress report — tuition, payments, balance, lessons, practice notes, credits and milestones on one page.</li>
+        <li><b>Honest limits:</b> LessonBook records payments — it never charges a card. It doesn't send reminders or sync between devices; backup export/import is the transfer path. One book per device/browser.</li>
+      </ul>
+    </div>
+  <div id="legalSection"></div>
+</section>
+</main>
+<footer>LessonBook — one file, no account, no subscription. Your studio's records never leave this device.</footer>
+<div id="printArea"></div>
+
+<script>
+'use strict';
+/* ============ helpers ============ */
+var LS_KEY='lessonbook-v1';
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var _uid=1;
+function uid(p){return (p||'id')+'-'+(Date.now().toString(36))+'-'+(_uid++).toString(36)+Math.floor(Math.random()*1e4).toString(36);}
+function pad2(n){return (n<10?'0':'')+n;}
+function dstr(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function parseD(s){var p=String(s||'').split('-');return new Date(+p[0],(+p[1]||1)-1,+p[2]||1);}
+function todayStr(){return dstr(new Date());}
+function addDays(s,n){var d=parseD(s);d.setDate(d.getDate()+n);return dstr(d);}
+function addMonthsKey(key,n){var p=key.split('-');var d=new Date(+p[0],(+p[1]||1)-1+n,1);return d.getFullYear()+'-'+pad2(d.getMonth()+1);}
+function monthLabel(key){var p=key.split('-');var names=['January','February','March','April','May','June','July','August','September','October','November','December'];return names[(+p[1]||1)-1]+' '+p[0];}
+function fmtDate(s){if(!s)return '—';var d=parseD(s);return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});}
+function fmtDateShort(s){if(!s)return '—';var d=parseD(s);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function fmtTime(t){if(!t)return '';var p=t.split(':');var h=+p[0],m=+p[1]||0;var ap=h>=12?'PM':'AM';h=h%12;if(h===0)h=12;return h+':'+pad2(m)+' '+ap;}
+function money(n){n=+n||0;if(!isFinite(n))n=0;return '$'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function num(v){var n=parseFloat(v);return isFinite(n)?n:0;}
+function weekStartOf(s){var d=parseD(s);var dow=d.getDay();var diff=(dow+6)%7;d.setDate(d.getDate()-diff);return dstr(d);}
+var DOW_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+/* ============ state ============ */
+var state=null;
+function defaultSettings(){return {studioName:'My Studio',teacherName:'',cancelHours:24,creditExpiryDays:60};}
+function emptyState(){return {settings:defaultSettings(),students:[],lessons:[],credits:[],charges:[],payments:[],milestones:[],demo:false,demoIds:null};}
+function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}}
+function load(){try{var raw=localStorage.getItem(LS_KEY);if(raw){var s=JSON.parse(raw);if(s&&s.settings&&Array.isArray(s.students))return s;}}catch(e){}return null;}
+
+/* ============ lookups ============ */
+function studentById(id){for(var i=0;i<state.students.length;i++)if(state.students[i].id===id)return state.students[i];return null;}
+function lessonById(id){for(var i=0;i<state.lessons.length;i++)if(state.lessons[i].id===id)return state.lessons[i];return null;}
+function creditById(id){for(var i=0;i<state.credits.length;i++)if(state.credits[i].id===id)return state.credits[i];return null;}
+
+/* ============ credits ============ */
+var CREDIT_EARNING=['cancelledPolicy','teacherCancelled'];
+var PAYABLE=['taught','cancelledLate','noShow'];
+function creditState(c,asOf){
+  asOf=asOf||todayStr();
+  if(c.usedLessonId)return 'used';
+  if(asOf>c.expiresDate)return 'expired';
+  return 'available';
+}
+function creditsFor(studentId){return state.credits.filter(function(c){return c.studentId===studentId;});}
+function availableCredits(studentId,asOf){
+  asOf=asOf||todayStr();
+  return creditsFor(studentId).filter(function(c){return creditState(c,asOf)==='available';})
+    .sort(function(a,b){return a.expiresDate<b.expiresDate?-1:1;});
+}
+function earnCredit(lesson){
+  for(var i=0;i<state.credits.length;i++)if(state.credits[i].sourceLessonId===lesson.id)return state.credits[i];
+  var c={id:uid('cr'),studentId:lesson.studentId,sourceLessonId:lesson.id,earnedDate:lesson.date,
+    expiresDate:addDays(lesson.date,Math.max(1,+state.settings.creditExpiryDays||60))};
+  state.credits.push(c);return c;
+}
+function revokeCredit(lesson){
+  for(var i=state.credits.length-1;i>=0;i--){
+    if(state.credits[i].sourceLessonId===lesson.id&&!state.credits[i].usedLessonId)state.credits.splice(i,1);
+  }
+}
+
+/* ============ charges & balances ============ */
+function syncPerLessonCharge(lesson){
+  var st=studentById(lesson.studentId);
+  var idx=-1;
+  for(var i=0;i<state.charges.length;i++)if(state.charges[i].lessonId===lesson.id){idx=i;break;}
+  var shouldCharge=!!st&&st.billing==='perlesson'&&lesson.type==='regular'&&PAYABLE.indexOf(lesson.status)>=0;
+  if(shouldCharge&&idx<0){
+    state.charges.push({id:uid('ch'),studentId:lesson.studentId,date:lesson.date,kind:'lesson',lessonId:lesson.id,
+      desc:'Lesson — '+fmtDateShort(lesson.date),amount:num(lesson.rateSnapshot)});
+  }else if(!shouldCharge&&idx>=0){
+    state.charges.splice(idx,1);
+  }
+}
+function studentCharges(id){return state.charges.filter(function(c){return c.studentId===id;});}
+function studentPayments(id){return state.payments.filter(function(p){return p.studentId===id;});}
+function sumAmt(arr){var t=0;for(var i=0;i<arr.length;i++)t+=num(arr[i].amount);return Math.round(t*100)/100;}
+function studentBalance(id){return Math.round((sumAmt(studentCharges(id))-sumAmt(studentPayments(id)))*100)/100;}
+function chargeMonthlyTuition(monthKey){
+  var added=0;
+  state.students.forEach(function(st){
+    if(!st.active||st.billing!=='monthly')return;
+    var exists=state.charges.some(function(c){return c.studentId===st.id&&c.kind==='tuition'&&c.monthKey===monthKey;});
+    if(!exists){
+      state.charges.push({id:uid('ch'),studentId:st.id,date:monthKey+'-01',kind:'tuition',monthKey:monthKey,
+        desc:'Tuition — '+monthLabel(monthKey),amount:num(st.rate)});
+      added++;
+    }
+  });
+  return added;
+}
+
+/* ============ lesson status engine ============ */
+function applyStatus(lesson,newStatus){
+  var old=lesson.status;
+  if(old===newStatus)return;
+  var wasEarning=CREDIT_EARNING.indexOf(old)>=0, isEarning=CREDIT_EARNING.indexOf(newStatus)>=0;
+  lesson.status=newStatus;
+  if(lesson.type==='regular'){
+    if(isEarning&&!wasEarning)earnCredit(lesson);
+    if(wasEarning&&!isEarning)revokeCredit(lesson);
+    syncPerLessonCharge(lesson);
+  }else if(lesson.type==='makeup'&&lesson.creditId){
+    var c=creditById(lesson.creditId);
+    if(isEarning&&c&&c.usedLessonId===lesson.id){c.usedLessonId=null;lesson.creditId=null;}
+  }
+}
+function addLesson(studentId,date,time,duration,type,creditId){
+  var st=studentById(studentId);if(!st)return null;
+  var l={id:uid('ls'),studentId:studentId,date:date,time:time||st.time||'16:00',duration:Math.max(5,num(duration)||num(st.duration)||45),
+    type:type||'regular',status:'scheduled',notes:'',rateSnapshot:num(st.rate),creditId:creditId||null};
+  state.lessons.push(l);return l;
+}
+function bookMakeup(studentId,date,time,duration){
+  var avail=availableCredits(studentId,date);
+  if(!avail.length)return {ok:false,error:'No available make-up credit for that student on that date (credits must be unused and unexpired by the make-up date).'};
+  var c=avail[0];
+  var l=addLesson(studentId,date,time,duration,'makeup',c.id);
+  if(!l)return {ok:false,error:'Student not found.'};
+  c.usedLessonId=l.id;
+  return {ok:true,lesson:l,credit:c};
+}
+function deleteLesson(id){
+  var l=lessonById(id);if(!l)return;
+  if(l.type==='makeup'&&l.creditId){var c=creditById(l.creditId);if(c&&c.usedLessonId===l.id)c.usedLessonId=null;}
+  revokeCredit(l);
+  for(var i=state.charges.length-1;i>=0;i--)if(state.charges[i].lessonId===id)state.charges.splice(i,1);
+  state.lessons=state.lessons.filter(function(x){return x.id!==id;});
+}
+function generateWeek(weekStart){
+  var created=0;
+  state.students.forEach(function(st){
+    if(!st.active)return;
+    var offset=((st.dow-parseD(weekStart).getDay())%7+7)%7;
+    var date=addDays(weekStart,offset);
+    var exists=state.lessons.some(function(l){return l.studentId===st.id&&l.date===date;});
+    if(!exists){addLesson(st.id,date,st.time,st.duration,'regular',null);created++;}
+  });
+  return created;
+}
+function lessonsOn(date){return state.lessons.filter(function(l){return l.date===date;}).sort(function(a,b){return a.time<b.time?-1:1;});}
+function statusLabel(s){
+  return {scheduled:'Scheduled',taught:'Taught',cancelledPolicy:'Cancelled — in policy',cancelledLate:'Cancelled — late',noShow:'No-show',teacherCancelled:'Cancelled by teacher'}[s]||s;
+}
+
+/* ============ demo seed ============ */
+function seedDemo(){
+  state=emptyState();
+  state.settings={studioName:'Sunrise Music Studio',teacherName:'A. Rivera',cancelHours:24,creditExpiryDays:60};
+  state.demo=true;
+  var defs=[
+    {name:'Emma Chen',subject:'Piano',contact:'Mom: Grace Chen · 555-0101',billing:'monthly',rate:170,dow:2,time:'16:00',duration:45,notes:'Preparing Grade 3 pieces. Loves Chopin.'},
+    {name:"Liam O'Connor",subject:'Guitar',contact:'Dad: Sean O\u2019Connor · 555-0102',billing:'perlesson',rate:50,dow:3,time:'17:00',duration:60,notes:'Fingerstyle focus. Bringing his own guitar now.'},
+    {name:'Sofia Ramirez',subject:'Violin',contact:'Mom: Lucia Ramirez · 555-0103',billing:'monthly',rate:160,dow:4,time:'15:30',duration:45,notes:'Working on vibrato. Suzuki Book 4.'},
+    {name:'Noah Williams',subject:'Drums',contact:'Dad: Marcus Williams · 555-0104',billing:'perlesson',rate:45,dow:1,time:'18:00',duration:30,notes:'Beginner — reading rhythms well.'},
+    {name:'Ava Patel',subject:'Voice',contact:'Mom: Priya Patel · 555-0105',billing:'monthly',rate:180,dow:5,time:'16:30',duration:45,notes:'Audition prep for spring musical.'},
+    {name:'Oliver Smith',subject:'Piano',contact:'Oliver (adult student) · 555-0106',billing:'perlesson',rate:50,dow:6,time:'10:00',duration:30,notes:'Adult beginner. Jazz standards goal.'}
+  ];
+  var ids={};
+  defs.forEach(function(d){var st={id:uid('st'),active:true};for(var k in d)st[k]=d[k];state.students.push(st);ids[d.name]=st.id;});
+  var today=todayStr();
+  function dateInWeek(weeksAgo,dow){var ws=weekStartOf(addDays(today,-7*weeksAgo));var off=((dow-parseD(ws).getDay())%7+7)%7;return addDays(ws,off);}
+  var notesPool=['Good progress on scales.','Assigned pp. 12–14 for next week.','Rhythm work — much steadier.','New piece started.','Technique: relaxed shoulders, big improvement.'];
+  var ni=0;
+  // regular lessons for the last 4 weeks + current week
+  defs.forEach(function(d){
+    for(var w=4;w>=0;w--){
+      var date=dateInWeek(w,d.dow);
+      var l=addLesson(ids[d.name],date,d.time,d.duration,'regular',null);
+      if(date>today){/* stays scheduled */}
+      else{
+        var st2='taught';
+        if(d.name==='Emma Chen'&&w===2)st2='cancelledPolicy';
+        if(d.name==='Sofia Ramirez'&&w===1)st2='teacherCancelled';
+        if(d.name==="Liam O'Connor"&&w===3)st2='noShow';
+        if(d.name==='Noah Williams'&&w===2)st2='cancelledLate';
+        if(d.name==='Ava Patel'&&w===1)st2='cancelledPolicy';
+        applyStatus(l,st2);
+        if(st2==='taught'){l.notes=notesPool[ni++%notesPool.length];}
+      }
+    }
+  });
+  // Emma uses her credit on a make-up last week (Wednesday slot)
+  var emmaMakeup=bookMakeup(ids['Emma Chen'],dateInWeek(1,3),'16:30',45);
+  if(emmaMakeup.ok){applyStatus(emmaMakeup.lesson,'taught');emmaMakeup.lesson.notes='Make-up lesson — Grade 3 scales and sight-reading.';}
+  // tuition for last month + this month (monthly students)
+  var curKey=today.slice(0,7), prevKey=addMonthsKey(curKey,-1);
+  chargeMonthlyTuition(prevKey);chargeMonthlyTuition(curKey);
+  function pay(name,amount,date,method){state.payments.push({id:uid('pay'),studentId:ids[name],date:date,amount:amount,method:method,note:''});}
+  pay('Emma Chen',170,prevKey+'-03','Card');pay('Emma Chen',170,curKey+'-03','Card');
+  pay('Sofia Ramirez',160,prevKey+'-05','Venmo');
+  pay('Ava Patel',180,prevKey+'-02','Card');
+  pay("Liam O'Connor",150,dateInWeek(1,3),'Cash');
+  pay('Noah Williams',90,dateInWeek(1,1),'Zelle');
+  pay('Oliver Smith',100,dateInWeek(2,6),'Card');
+  state.milestones.push({id:uid('ms'),studentId:ids['Emma Chen'],date:addDays(today,-55),title:'ABRSM Grade 3 Piano Exam',detail:'Passed with Merit'});
+  state.milestones.push({id:uid('ms'),studentId:ids['Emma Chen'],date:dateInWeek(3,6),title:'Spring Studio Recital',detail:'Performed Chopin Waltz in A minor'});
+  state.milestones.push({id:uid('ms'),studentId:ids['Sofia Ramirez'],date:dateInWeek(3,6),title:'Spring Studio Recital',detail:'Vivaldi A minor, 1st movement'});
+  state.milestones.push({id:uid('ms'),studentId:ids['Ava Patel'],date:addDays(today,-20),title:'School Musical Audition',detail:'Cast as featured soloist'});
+  state.demoIds={students:state.students.map(function(r){return r.id;}),lessons:state.lessons.map(function(r){return r.id;}),credits:state.credits.map(function(r){return r.id;}),charges:state.charges.map(function(r){return r.id;}),payments:state.payments.map(function(r){return r.id;}),milestones:state.milestones.map(function(r){return r.id;})};
+  save();
+}
+
+/* ============ rendering ============ */
+var uiWeek=weekStartOf(todayStr());
+var selectedStudentId=null;
+function showErr(msg){var b=$('errBox');if(msg){b.textContent=msg;b.style.display='block';}else{b.style.display='none';b.textContent='';}}
+function activeStudents(){return state.students.filter(function(s){return s.active;});}
+function studentOptions(sel,onlyWithCredits){
+  var html='';
+  state.students.forEach(function(st){
+    if(!st.active)return;
+    if(onlyWithCredits&&availableCredits(st.id).length===0)return;
+    html+='<option value="'+st.id+'"'+(st.id===sel?' selected':'')+'>'+esc(st.name)+' — '+esc(st.subject)+'</option>';
+  });
+  return html;
+}
+function renderAll(){
+  $('studioLine').textContent=(state.settings.studioName||'My Studio')+' — roster, make-up credits & tuition, fully offline.';
+  renderDashboard();renderWeek();renderStudents();renderCredits();renderMoney();
+  $('ooStudent').innerHTML=studentOptions($('ooStudent').value);
+  $('chStudent').innerHTML=studentOptions($('chStudent').value);
+  $('payStudent').innerHTML=studentOptions($('payStudent').value);
+  var mk=availableCredits($('mkStudent').value).length;
+  $('mkStudent').innerHTML=studentOptions($('mkStudent').value,true);
+  $('mkHint').textContent=$('mkStudent').options.length?'':'No student currently has an available credit.';
+}
+function renderDashboard(){
+  var t=todayStr();
+  var act=activeStudents();
+  var cws=weekStartOf(t);
+  var wkLessons=state.lessons.filter(function(l){return l.date>=cws&&l.date<=addDays(cws,6);});
+  var creditsAvail=0,expiringSoon=0;
+  state.credits.forEach(function(c){var cs=creditState(c,t);if(cs==='available'){creditsAvail++;if(c.expiresDate<=addDays(t,14))expiringSoon++;}});
+  var owed=0,behind=0;
+  act.forEach(function(st){var b=studentBalance(st.id);if(b>0){owed+=b;behind++;}});
+  $('dashStats').innerHTML=
+    '<div class="stat"><b>'+act.length+'</b><span>Active students</span></div>'+
+    '<div class="stat"><b>'+wkLessons.length+'</b><span>Lessons this week</span></div>'+
+    '<div class="stat"><b>'+creditsAvail+'</b><span>Make-up credits outstanding</span></div>'+
+    '<div class="stat"><b>'+money(owed)+'</b><span>Owed by '+behind+' student'+(behind===1?'':'s')+'</span></div>';
+  var att=[];
+  state.credits.forEach(function(c){
+    if(creditState(c,t)==='available'&&c.expiresDate<=addDays(t,14)){
+      var st=studentById(c.studentId);
+      att.push('<li>⏳ <b>'+esc(st?st.name:'?')+'</b> has a make-up credit expiring <b>'+fmtDateShort(c.expiresDate)+'</b> — book it or lose it.</li>');
+    }
+  });
+  act.forEach(function(st){
+    var b=studentBalance(st.id);
+    if(b>0){
+      var oldest=null;
+      studentCharges(st.id).forEach(function(c){if(!oldest||c.date<oldest)oldest=c.date;});
+      att.push('<li>💵 <b>'+esc(st.name)+'</b> owes <b>'+money(b)+'</b>'+(oldest?' (oldest charge '+fmtDateShort(oldest)+')':'')+'.</li>');
+    }
+  });
+  var unmarked=state.lessons.filter(function(l){return l.date<t&&l.status==='scheduled';});
+  if(unmarked.length)att.push('<li>📝 '+unmarked.length+' past lesson'+(unmarked.length===1?' is':'s are')+' still marked "Scheduled" — mark them taught/cancelled so credits and charges stay right.</li>');
+  $('dashAttention').innerHTML=att.length?'<ul style="margin:0;padding-left:18px">'+att.join('')+'</ul>':'<p class="muted" style="margin:0">Nothing needs attention. 🎉</p>';
+  var soon=state.lessons.filter(function(l){return l.date===t||l.date===addDays(t,1);}).sort(function(a,b){return (a.date+a.time)<(b.date+b.time)?-1:1;});
+  $('dashSoon').innerHTML=soon.length?soon.map(function(l){
+    var st=studentById(l.studentId);
+    return '<div class="lessonrow"><div class="who"><b>'+esc(st?st.name:'?')+'</b> — '+esc(st?st.subject:'')+'<br><span class="muted small">'+(l.date===t?'Today':'Tomorrow')+' · '+fmtTime(l.time)+' · '+l.duration+' min'+(l.type==='makeup'?' · <span class="pill soft">MAKE-UP</span>':'')+'</span></div><span class="pill '+(l.status==='scheduled'?'soft':'good')+'">'+statusLabel(l.status)+'</span></div>';
+  }).join(''):'<p class="muted" style="margin:0">No lessons today or tomorrow.</p>';
+}
+function uiWeekStr(){return uiWeek;}
+function lessonRow(l){
+  var st=studentById(l.studentId);
+  var statuses=['scheduled','taught','cancelledPolicy','cancelledLate','noShow','teacherCancelled'];
+  var opts=statuses.map(function(s){return '<option value="'+s+'"'+(l.status===s?' selected':'')+'>'+statusLabel(s)+'</option>';}).join('');
+  var creditTag='';
+  if(l.type==='makeup')creditTag=' <span class="pill soft">MAKE-UP</span>';
+  else if(CREDIT_EARNING.indexOf(l.status)>=0)creditTag=' <span class="pill warn">credit earned</span>';
+  return '<div class="lessonrow">'+
+    '<div class="who"><b>'+fmtTime(l.time)+'</b> · '+l.duration+' min — <b>'+esc(st?st.name:'(deleted)')+'</b> · '+esc(st?st.subject:'')+creditTag+'</div>'+
+    '<select onchange="LB.setStatus(\''+l.id+'\',this.value)" aria-label="Lesson status">'+opts+'</select>'+
+    '<input type="text" placeholder="Practice note…" value="'+esc(l.notes||'')+'" onchange="LB.setNotes(\''+l.id+'\',this.value)">'+
+    '<button class="btn ghost small" onclick="LB.delLesson(\''+l.id+'\')">Delete</button></div>';
+}
+function renderWeek(){
+  $('wkLabel').textContent='Week of '+fmtDateShort(uiWeek)+' – '+fmtDateShort(addDays(uiWeek,6));
+  var html='';
+  for(var i=0;i<7;i++){
+    var date=addDays(uiWeek,i);
+    var ls=lessonsOn(date);
+    html+='<div class="dayblock"><h3>'+fmtDate(date)+(date===todayStr()?' · <span class="pill soft">TODAY</span>':'')+'</h3>';
+    html+=ls.length?ls.map(lessonRow).join(''):'<div class="lessonrow"><span class="muted small">No lessons.</span></div>';
+    html+='</div>';
+  }
+  $('weekBody').innerHTML=html;
+}
+function renderStudents(){
+  var rows=state.students.map(function(st){
+    var b=studentBalance(st.id);
+    var cr=availableCredits(st.id).length;
+    return '<tr><td><b>'+esc(st.name)+'</b>'+(st.active?'':' <span class="pill grey">inactive</span>')+'<br><span class="muted small">'+esc(st.subject)+'</span></td>'+
+      '<td>'+(st.billing==='monthly'?'Monthly '+money(st.rate):money(st.rate)+' / lesson')+'<br><span class="muted small">'+DOW_NAMES[st.dow]+' '+fmtTime(st.time)+' · '+st.duration+' min</span></td>'+
+      '<td>'+(cr?'<span class="pill warn">'+cr+' credit'+(cr===1?'':'s')+'</span>':'<span class="muted">—</span>')+'</td>'+
+      '<td>'+(b>0?'<span class="money-pos">'+money(b)+' owed</span>':(b<0?'<span>'+money(-b)+' in credit</span>':'<span class="money-zero">Paid up</span>'))+'</td>'+
+      '<td class="row-actions"><button class="btn secondary small" onclick="LB.selectStudent(\''+st.id+'\')">Open</button> '+
+      '<button class="btn ghost small" onclick="LB.editStudent(\''+st.id+'\')">Edit</button> '+
+      '<button class="btn ghost small" onclick="LB.toggleActive(\''+st.id+'\')">'+(st.active?'Deactivate':'Reactivate')+'</button></td></tr>';
+  }).join('');
+  $('studentList').innerHTML=state.students.length?'<table><tr><th>Student</th><th>Billing &amp; slot</th><th>Credits</th><th>Balance</th><th></th></tr>'+rows+'</table>':'<p class="muted">No students yet. Add your first student above'+(state.demo?'':'')+'.</p>';
+  renderStudentDetail();
+}
+function renderStudentDetail(){
+  var st=selectedStudentId?studentById(selectedStudentId):null;
+  $('studentDetailCard').style.display=st?'block':'none';
+  if(!st)return;
+  $('detailTitle').textContent=st.name+' — '+st.subject;
+  var b=studentBalance(st.id);
+  var ls=state.lessons.filter(function(l){return l.studentId===st.id;}).sort(function(a,b2){return (a.date+a.time)>(b2.date+b2.time)?-1:1;}).slice(0,10);
+  var ms=state.milestones.filter(function(m){return m.studentId===st.id;}).sort(function(a,b2){return a.date>b2.date?-1:1;});
+  var crs=creditsFor(st.id);
+  $('studentDetail').innerHTML=
+    '<p class="small">'+esc(st.contact||'')+(st.notes?'<br>'+esc(st.notes):'')+'<br>Billing: '+(st.billing==='monthly'?'Monthly flat '+money(st.rate):'Per-lesson '+money(st.rate))+' · Usual slot: '+DOW_NAMES[st.dow]+' '+fmtTime(st.time)+' ('+st.duration+' min)<br>Balance: '+(b>0?'<span class="money-pos">'+money(b)+' owed</span>':'<span class="money-zero">Paid up</span>')+' · Make-up credits available: <b>'+availableCredits(st.id).length+'</b> of '+crs.length+' total</p>'+
+    '<h3>Recent lessons</h3>'+(ls.length?'<table><tr><th>Date</th><th>Type</th><th>Status</th><th>Practice note</th></tr>'+ls.map(function(l){return '<tr><td>'+fmtDateShort(l.date)+'</td><td>'+(l.type==='makeup'?'Make-up':'Regular')+'</td><td>'+statusLabel(l.status)+'</td><td>'+esc(l.notes||'—')+'</td></tr>';}).join('')+'</table>':'<p class="muted small">No lessons yet.</p>')+
+    '<h3>Milestones</h3>'+(ms.length?'<table><tr><th>Date</th><th>Milestone</th><th>Detail</th><th></th></tr>'+ms.map(function(m){return '<tr><td>'+fmtDateShort(m.date)+'</td><td><b>'+esc(m.title)+'</b></td><td>'+esc(m.detail||'')+'</td><td><button class="btn ghost small" onclick="LB.delMilestone(\''+m.id+'\')">Delete</button></td></tr>';}).join('')+'</table>':'<p class="muted small">No milestones recorded yet.</p>');
+}
+function renderCredits(){
+  var f=$('creditFilter').value;
+  var t=todayStr();
+  var list=state.credits.slice().sort(function(a,b){return a.earnedDate>b.earnedDate?-1:1;});
+  var rows=list.filter(function(c){return f==='all'||creditState(c,t)===f;}).map(function(c){
+    var st=studentById(c.studentId);var cs=creditState(c,t);
+    var src=lessonById(c.sourceLessonId);
+    var usedL=c.usedLessonId?lessonById(c.usedLessonId):null;
+    var pill=cs==='available'?'<span class="pill good">Available</span>':(cs==='used'?'<span class="pill soft">Used</span>':'<span class="pill bad">Expired</span>');
+    return '<tr><td><b>'+esc(st?st.name:'(deleted)')+'</b></td><td>Earned '+fmtDateShort(c.earnedDate)+(src?'<br><span class="muted small">from '+fmtDateShort(src.date)+' lesson</span>':'')+'</td>'+
+      '<td>Expires '+fmtDateShort(c.expiresDate)+'</td><td>'+pill+(usedL?'<br><span class="muted small">make-up on '+fmtDateShort(usedL.date)+'</span>':'')+'</td></tr>';
+  }).join('');
+  $('creditList').innerHTML=list.length?('<table><tr><th>Student</th><th>Earned</th><th>Expiry</th><th>Status</th></tr>'+(rows||'<tr><td colspan="4" class="muted">No credits in this view.</td></tr>')+'</table>'):'<p class="muted">No make-up credits yet. A credit appears here the moment a lesson is marked "Cancelled — in policy" or "Cancelled by teacher".</p>';
+}
+function renderMoney(){
+  var rows=activeStudents().concat(state.students.filter(function(s){return !s.active;})).map(function(st){
+    var ch=sumAmt(studentCharges(st.id)),pm=sumAmt(studentPayments(st.id)),b=studentBalance(st.id);
+    return '<tr><td><b>'+esc(st.name)+'</b></td><td>'+money(ch)+'</td><td>'+money(pm)+'</td><td>'+(b>0?'<span class="money-pos">'+money(b)+' owed</span>':(b<0?money(-b)+' in credit':'<span class="money-zero">Paid up</span>'))+'</td></tr>';
+  }).join('');
+  var totCh=sumAmt(state.charges),totPay=sumAmt(state.payments);
+  $('balanceList').innerHTML=state.students.length?'<table><tr><th>Student</th><th>Charged</th><th>Paid</th><th>Balance</th></tr>'+rows+'<tr><td><b>Studio totals</b></td><td><b>'+money(totCh)+'</b></td><td><b>'+money(totPay)+'</b></td><td><b>'+money(totCh-totPay)+'</b></td></tr></table>':'<p class="muted">No students yet.</p>';
+  var acts=[];
+  state.charges.forEach(function(c){acts.push({date:c.date,sort:c.date,kind:'Charge',sid:c.studentId,text:c.desc,amt:num(c.amount),id:c.id,ctype:'charge'});});
+  state.payments.forEach(function(p){acts.push({date:p.date,sort:p.date,kind:'Payment',sid:p.studentId,text:(p.method||'Payment')+(p.note?' — '+p.note:''),amt:-num(p.amount),id:p.id,ctype:'payment'});});
+  acts.sort(function(a,b){return a.sort>b.sort?-1:1;});
+  $('activityList').innerHTML=acts.length?'<table><tr><th>Date</th><th>Student</th><th></th><th>Item</th><th>Amount</th><th></th></tr>'+acts.slice(0,40).map(function(a){
+    var st=studentById(a.sid);
+    return '<tr><td>'+fmtDateShort(a.date)+'</td><td>'+esc(st?st.name:'(deleted)')+'</td><td><span class="pill '+(a.kind==='Charge'?'warn':'good')+'">'+a.kind+'</span></td><td>'+esc(a.text)+'</td><td>'+(a.amt<0?'−'+money(-a.amt):money(a.amt))+'</td><td><button class="btn ghost small" onclick="LB.delActivity(\''+a.ctype+'\',\''+a.id+'\')">Delete</button></td></tr>';
+  }).join('')+'</table>':'<p class="muted">No charges or payments yet.</p>';
+}
+function buildStatement(st){
+  var t=todayStr();
+  var charges=studentCharges(st.id).slice().sort(function(a,b){return a.date<b.date?-1:1;});
+  var payments=studentPayments(st.id).slice().sort(function(a,b){return a.date<b.date?-1:1;});
+  var ls=state.lessons.filter(function(l){return l.studentId===st.id;}).sort(function(a,b){return (a.date+a.time)<(b.date+b.time)?-1:1;});
+  var ms=state.milestones.filter(function(m){return m.studentId===st.id;}).sort(function(a,b){return a.date<b.date?-1:1;});
+  var b=studentBalance(st.id);
+  var h='<div class="stmt-head"><h1>'+esc(state.settings.studioName||'My Studio')+'</h1>'+
+    '<div>Statement &amp; Progress Report — <b>'+esc(st.name)+'</b> ('+esc(st.subject)+')</div>'+
+    (state.settings.teacherName?'<div>Teacher: '+esc(state.settings.teacherName)+'</div>':'')+
+    '<div>Generated '+fmtDate(t)+'</div></div>';
+  h+='<h2>Account</h2><table><tr><th>Date</th><th>Item</th><th>Amount</th></tr>';
+  charges.forEach(function(c){h+='<tr><td>'+fmtDateShort(c.date)+'</td><td>'+esc(c.desc)+'</td><td>'+money(c.amount)+'</td></tr>';});
+  payments.forEach(function(p){h+='<tr><td>'+fmtDateShort(p.date)+'</td><td>Payment — '+esc(p.method||'')+(p.note?' ('+esc(p.note)+')':'')+'</td><td>−'+money(p.amount)+'</td></tr>';});
+  h+='<tr><td colspan="2"><b>Balance '+(b>0?'due':'')+'</b></td><td><b>'+money(b)+'</b></td></tr></table>';
+  h+='<h2>Make-up credits</h2><p>Available: <b>'+availableCredits(st.id).length+'</b>';
+  var av=availableCredits(st.id);
+  if(av.length)h+=' (oldest expires '+fmtDateShort(av[0].expiresDate)+')';
+  h+=' · Studio policy: cancel with at least '+state.settings.cancelHours+' hours\u2019 notice to earn a credit; credits expire '+state.settings.creditExpiryDays+' days after the missed lesson.</p>';
+  h+='<h2>Lessons</h2><table><tr><th>Date</th><th>Type</th><th>Status</th><th>Practice notes</th></tr>';
+  ls.forEach(function(l){h+='<tr><td>'+fmtDateShort(l.date)+'</td><td>'+(l.type==='makeup'?'Make-up':'Regular')+'</td><td>'+statusLabel(l.status)+'</td><td>'+esc(l.notes||'')+'</td></tr>';});
+  h+='</table>';
+  if(ms.length){h+='<h2>Milestones</h2><table><tr><th>Date</th><th>Milestone</th><th>Detail</th></tr>';
+    ms.forEach(function(m){h+='<tr><td>'+fmtDateShort(m.date)+'</td><td>'+esc(m.title)+'</td><td>'+esc(m.detail||'')+'</td></tr>';});
+    h+='</table>';}
+  return h;
+}
+
+/* ============ actions (UI) ============ */
+function refresh(){save();renderAll();}
+var LB={
+  setStatus:function(id,v){var l=lessonById(id);if(!l)return;applyStatus(l,v);refresh();},
+  setNotes:function(id,v){var l=lessonById(id);if(!l)return;l.notes=v;save();},
+  delLesson:function(id){deleteLesson(id);refresh();},
+  selectStudent:function(id){selectedStudentId=id;renderStudents();},
+  editStudent:function(id){
+    var st=studentById(id);if(!st)return;
+    $('stId').value=st.id;$('stName').value=st.name;$('stSubject').value=st.subject;$('stContact').value=st.contact||'';
+    $('stBilling').value=st.billing;$('stRate').value=st.rate;$('stDow').value=st.dow;$('stTime').value=st.time;$('stDur').value=st.duration;$('stNotes').value=st.notes||'';
+    $('studentFormTitle').textContent='Edit student — '+st.name;$('stCancelEdit').style.display='inline-block';
+  },
+  toggleActive:function(id){var st=studentById(id);if(!st)return;st.active=!st.active;refresh();},
+  delMilestone:function(id){state.milestones=state.milestones.filter(function(m){return m.id!==id;});refresh();},
+  delActivity:function(kind,id){
+    if(kind==='charge'){
+      var c=null;state.charges.forEach(function(x){if(x.id===id)c=x;});
+      state.charges=state.charges.filter(function(x){return x.id!==id;});
+      if(c&&c.lessonId){var l=lessonById(c.lessonId);if(l){/* keep lesson; charge removed manually */}}
+    }else{
+      state.payments=state.payments.filter(function(x){return x.id!==id;});
+    }
+    refresh();
+  }
+};
+window.LB=LB;
+/* core exports for testing */
+window.LB_CORE={get state(){return state;},setState:function(s){state=s;},renderAll:renderAll,save:save,addLesson:addLesson,applyStatus:applyStatus,bookMakeup:bookMakeup,deleteLesson:deleteLesson,chargeMonthlyTuition:chargeMonthlyTuition,studentBalance:studentBalance,availableCredits:availableCredits,creditState:creditState,generateWeek:generateWeek,seedDemo:seedDemo,emptyState:emptyState,addDays:addDays,sumAmt:sumAmt,studentCharges:studentCharges,creditsFor:creditsFor};
+
+/* ============ wiring ============ */
+function showTab(name){
+  var btns=document.querySelectorAll('#tabbar button');
+  for(var i=0;i<btns.length;i++)btns[i].classList.toggle('active',btns[i].getAttribute('data-tab')===name);
+  var views=document.querySelectorAll('.view');
+  for(var j=0;j<views.length;j++)views[j].classList.toggle('active',views[j].id==='view-'+name);
+  if(name==='settings')fillSettings();
+}
+function fillSettings(){
+  $('setStudio').value=state.settings.studioName||'';$('setTeacher').value=state.settings.teacherName||'';
+  $('setCancelHours').value=state.settings.cancelHours;$('setExpiry').value=state.settings.creditExpiryDays;
+}
+function init(){
+  var dowSel=$('stDow');
+  dowSel.innerHTML=DOW_NAMES.map(function(n,i){return '<option value="'+i+'">'+n+'</option>';}).join('');
+  dowSel.value='2';
+  var tabs=document.querySelectorAll('#tabbar button');
+  for(var i=0;i<tabs.length;i++)(function(btn){btn.addEventListener('click',function(){showTab(btn.getAttribute('data-tab'));});})(tabs[i]);
+  $('wkPrev').addEventListener('click',function(){uiWeek=addDays(uiWeek,-7);renderWeek();renderDashboard();});
+  $('wkNext').addEventListener('click',function(){uiWeek=addDays(uiWeek,7);renderWeek();renderDashboard();});
+  $('wkToday').addEventListener('click',function(){uiWeek=weekStartOf(todayStr());renderWeek();renderDashboard();});
+  $('wkGenerate').addEventListener('click',function(){var n=generateWeek(uiWeek);refresh();showErr(n?('Added '+n+' lesson'+(n===1?'':'s')+' for this week.'):null);if(!n)alert2('Every active student already has a lesson this week.');});
+  function alert2(m){var b=$('errBox');b.textContent=m;b.style.display='block';setTimeout(function(){b.style.display='none';},4000);}
+  $('oneoffForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    var l=addLesson($('ooStudent').value,$('ooDate').value,$('ooTime').value,num($('ooDur').value),'regular',null);
+    if(l){refresh();showTab('week');}
+  });
+  $('studentForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    var name=$('stName').value.trim(),subject=$('stSubject').value.trim();
+    if(!name||!subject){showErr('Student name and subject are required.');return;}
+    var id=$('stId').value;
+    var data={name:name,subject:subject,contact:$('stContact').value.trim(),billing:$('stBilling').value,rate:num($('stRate').value),dow:+$('stDow').value,time:$('stTime').value||'16:00',duration:Math.max(5,num($('stDur').value)||45),notes:$('stNotes').value.trim()};
+    if(id){var st=studentById(id);if(st)for(var k in data)st[k]=data[k];}
+    else{var ns={id:uid('st'),active:true};for(var k2 in data)ns[k2]=data[k2];state.students.push(ns);selectedStudentId=ns.id;}
+    $('stId').value='';e.target.reset();dowSel.value='2';$('studentFormTitle').textContent='Add a student';$('stCancelEdit').style.display='none';
+    showErr(null);refresh();
+  });
+  $('stCancelEdit').addEventListener('click',function(){$('stId').value='';$('studentForm').reset();dowSel.value='2';$('studentFormTitle').textContent='Add a student';$('stCancelEdit').style.display='none';});
+  $('milestoneForm').addEventListener('submit',function(e){
+    e.preventDefault();if(!selectedStudentId)return;
+    var title=$('msTitle').value.trim();if(!title)return;
+    state.milestones.push({id:uid('ms'),studentId:selectedStudentId,date:$('msDate').value||todayStr(),title:title,detail:$('msDetail').value.trim()});
+    e.target.reset();refresh();
+  });
+  $('detailPrint').addEventListener('click',function(){
+    var st=studentById(selectedStudentId);if(!st)return;
+    $('printArea').innerHTML=buildStatement(st);window.print();
+  });
+  $('creditFilter').addEventListener('change',function(){renderCredits();});
+  $('makeupForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    var r=bookMakeup($('mkStudent').value,$('mkDate').value,$('mkTime').value,num($('mkDur').value));
+    if(!r.ok){showErr(r.error);return;}
+    showErr(null);refresh();showTab('week');
+    uiWeek=weekStartOf(r.lesson.date);renderWeek();renderDashboard();
+  });
+  $('chargeTuitionBtn').addEventListener('click',function(){
+    var mk=$('tuitionMonth').value||todayStr().slice(0,7);
+    var n=chargeMonthlyTuition(mk);refresh();
+    var b=$('errBox');b.textContent=n?('Charged tuition to '+n+' monthly student'+(n===1?'':'s')+' for '+monthLabel(mk)+'.'):(monthLabel(mk)+' tuition was already charged for every monthly student.');
+    b.style.display='block';setTimeout(function(){b.style.display='none';},4000);
+  });
+  $('chargeForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    state.charges.push({id:uid('ch'),studentId:$('chStudent').value,date:$('chDate').value||todayStr(),kind:'manual',desc:$('chDesc').value.trim(),amount:num($('chAmount').value)});
+    e.target.reset();refresh();
+  });
+  $('paymentForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    state.payments.push({id:uid('pay'),studentId:$('payStudent').value,date:$('payDate').value||todayStr(),amount:num($('payAmount').value),method:$('payMethod').value,note:$('payNote').value.trim()});
+    e.target.reset();refresh();
+  });
+  $('settingsForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    state.settings.studioName=$('setStudio').value.trim()||'My Studio';
+    state.settings.teacherName=$('setTeacher').value.trim();
+    state.settings.cancelHours=Math.max(0,num($('setCancelHours').value));
+    var ex=Math.max(1,num($('setExpiry').value)||60);
+    if(ex!==state.settings.creditExpiryDays){state.settings.creditExpiryDays=ex;}
+    refresh();
+  });
+  $('exportBtn').addEventListener('click',function(){
+    try{
+      var blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+      var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lessonbook-backup.json';a.click();
+      $('dataMsg').textContent='Backup exported.';
+    }catch(err){$('dataMsg').textContent='Export is not available in this browser context.';}
+  });
+  $('importFile').addEventListener('change',function(){
+    var f=this.files&&this.files[0];if(!f)return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var s=JSON.parse(reader.result);
+        if(!s||!s.settings||!Array.isArray(s.students)||!Array.isArray(s.lessons)||!Array.isArray(s.charges)||!Array.isArray(s.payments))throw new Error('shape');
+        state=s;selectedStudentId=null;uiWeek=weekStartOf(todayStr());refresh();
+        $('dataMsg').textContent='Backup imported.';
+      }catch(err){$('dataMsg').textContent='That file is not a valid LessonBook backup — nothing was changed.';}
+    };
+    reader.readAsText(f);
+  });
+  var eraseArmed=false;
+  $('clearBtn').addEventListener('click',function(){
+    if(!eraseArmed){eraseArmed=true;this.textContent='Click again to confirm erase';return;}
+    state=emptyState();selectedStudentId=null;eraseArmed=false;this.textContent='Erase everything & start empty';refresh();
+    $('dataMsg').textContent='All data erased. The book is empty.';
+  });
+  $('loadDemoBtn').addEventListener('click',function(){seedDemo();selectedStudentId=null;uiWeek=weekStartOf(todayStr());refresh();$('dataMsg').textContent='Demo studio loaded.';});
+  $('removeSampleBtn').addEventListener('click',function(){
+    var colls=['students','lessons','credits','charges','payments','milestones'];
+    if(state.demoIds){
+      var n=0;
+      colls.forEach(function(k){var ids={};(state.demoIds[k]||[]).forEach(function(id){ids[id]=1;});var before=state[k].length;state[k]=state[k].filter(function(r){return !ids[r.id];});n+=before-state[k].length;});
+      state.demo=false;state.demoIds=null;selectedStudentId=null;refresh();
+      $('dataMsg').textContent='Sample data removed ('+n+' records) — your own records and studio settings were kept.';
+    }else if(state.demo){
+      if(!confirm('This demo studio was loaded before sample tracking existed, so sample records cannot be told apart from any you added. Remove ALL current records (students, lessons, credits, charges, payments, milestones) and keep only your studio settings?'))return;
+      colls.forEach(function(k){state[k]=[];});
+      state.demo=false;selectedStudentId=null;refresh();
+      $('dataMsg').textContent='Sample data removed — all records cleared, studio settings kept.';
+    }else{
+      $('dataMsg').textContent='No sample data to remove — this book is all yours.';
+    }
+  });
+  $('chDate').value=todayStr();$('payDate').value=todayStr();$('ooDate').value=todayStr();$('mkDate').value=todayStr();
+  $('tuitionMonth').value=todayStr().slice(0,7);
+  var loaded=load();
+  if(loaded){state=loaded;}else{seedDemo();}
+  renderAll();
+}
+document.addEventListener('DOMContentLoaded',init);
+
+/* ================= Legal — Terms of Use acceptance (catalog pattern v1.0) ================= */
+var TERMS_VERSION = "1.0";
+var LEGAL_APP_NAME = "LessonBook";
+var LEGAL_HAS_DISCLAIMER = false;
+var LEGAL_TERMS_HTML = "<h3>Terms of Use \u2014 White Wolf Digital Apps</h3><p><b>Version 1.0 (DRAFT \u2014 pending attorney review)</b></p><p><b>Seller: White Wolf Tree Service LLC, selling digital products under the name \"White Wolf Digital\"</b></p><p><b>Contact: whitewolfoklahoma@gmail.com</b></p><h4>1. What you're buying</h4><p>Our apps (including ForgeFit AI, ForgeKitchen, TreeBid Pro, SnowBid,</p><p>WashPrice Pro, RoofSquares, JobProfit Tracker, PastureLedger, and the other</p><p>titles sold under White Wolf Digital) are single-file software tools. When</p><p>you buy one, you are buying a <b>license to use the file</b>, not ownership of</p><p>the software itself.</p><h4>2. Your license</h4><ul><li>You may use the app for your own personal or business work.</li><li>You may open it on your own devices (phone, tablet, computer) and move your</li></ul><p>  own data between them using the app's built-in backup/export tools.</p><ul><li>You may <b>not</b> resell, redistribute, give away, upload, or share the app</li></ul><p>  file (or a copy of it) with anyone else \u2014 including posting it online,</p><p>  bundling it with other products, or selling access to it.</p><ul><li>You may <b>not</b> claim the app as your own work, remove its branding or</li></ul><p>  notices, or use it to build a competing product for resale.</p><ul><li>One purchase = one buyer. A business purchase covers the buyer and their</li></ul><p>  own employees using it for that business's work; it does not cover other</p><p>  businesses.</p><h4>3. Your data stays yours \u2014 and stays on your device</h4><ul><li>The current versions of our apps run <b>entirely on your device</b>. They have</li></ul><p>  no accounts, no sign-in, no analytics, and they collect, transmit, and store</p><p>  <b>none</b> of your information on any server. We never see your data.</p><ul><li>Your records are stored in your browser/app storage on your device. **You</li></ul><p>  are responsible for backing them up** using the app's export tools. If you</p><p>  clear your browser data, lose your device, or uninstall the app, your</p><p>  records may be permanently lost, and we cannot recover them \u2014 we never had</p><p>  a copy.</p><ul><li>Files you export (backups, quotes, PDFs) are under your control. Where you</li></ul><p>  store or send them is up to you.</p><h4>4. Estimates are tools, not guarantees</h4><p>Every number our apps produce \u2014 bids, prices, costs, calorie targets,</p><p>projections, schedules, totals \u2014 is an **estimate generated from the</p><p>information you enter and the settings you choose**. Outputs are aids for</p><p>your own judgment, not guarantees of price, profit, outcome, or result. You</p><p>are responsible for checking any output before relying on it (see also the</p><p>disclaimer that applies to your app: Health Disclaimer for fitness/nutrition</p><p>apps, Estimator Disclaimer for contractor tools). If an input is wrong, the</p><p>output will be wrong.</p><h4>5. Acceptable use</h4><p>Don't use the apps to break the law, infringe anyone's rights, or</p><p>misrepresent quotes, invoices, or records to your own customers. For the</p><p>fitness apps, the guardrails in the app (healthy-rate limits, calorie floor)</p><p>are part of the product \u2014 don't treat the app as a way around them.</p><h4>6. Provided \"as is\"</h4><p>The apps are provided **\"as is\" and \"as available,\" without warranties of</p><p>any kind**, express or implied \u2014 including merchantability, fitness for a</p><p>particular purpose, accuracy of calculations, and uninterrupted or</p><p>error-free operation \u2014 to the maximum extent allowed by law. Software has</p><p>bugs; browsers change; we work to fix problems but do not promise any app is</p><p>error-free or will work on every device or browser forever.</p><h4>7. Limitation of liability</h4><p>To the maximum extent allowed by law:</p><ul><li>We are **not liable for indirect, incidental, special, or consequential</li></ul><p>  damages** \u2014 including lost profits, lost or mispriced jobs, lost data, or</p><p>  business interruption \u2014 arising from use of the apps.</p><ul><li>Our total liability for any claim connected to an app is limited to the</li></ul><p>  <b>amount you paid for that app</b>.</p><ul><li>Nothing in these terms limits liability that cannot legally be limited.</li></ul><h4>8. Refunds</h4><p>Refunds are handled **by the storefront you bought from, under that</p><p>storefront's policy** \u2014 Gumroad's refund policy for Gumroad purchases, and</p><p>Google Play's refund policy for Play purchases. These terms do not add to,</p><p>replace, or override the storefront's refund rules. If a file is defective</p><p>and won't open, contact us at whitewolfoklahoma@gmail.com and we'll fix or</p><p>replace the file.</p><h4>9. Updates and changes to these terms</h4><ul><li>We may release updated versions of an app. Updates may add, change, or</li></ul><p>  remove features.</p><ul><li>We may update these terms. The version you agreed to is recorded in the</li></ul><p>  app (version number and date) at first-run acceptance. If terms change,</p><p>  the app may ask you to accept the new version once on next open. Updated</p><p>  terms apply going forward, not retroactively.</p><ul><li>If you don't agree to an updated version of the terms, stop using the app.</li></ul><h4>10. Governing law</h4><p>These terms are governed by the laws of the <b>State of Oklahoma</b>, USA.</p><p>(Attorney to confirm governing law and venue before publication.)</p><h4>11. Contact</h4><p>White Wolf Tree Service LLC (White Wolf Digital) \u2014</p><p>whitewolfoklahoma@gmail.com.</p><h4>CONNECTED FEATURES \u2014 takes effect only when these features ship</h4><p>*The sections below apply only to future connected features (device sync via</p><p>Health Connect, AI voice logging, and the AI Goal Preview in ForgeFit). They</p><p>do not apply to the current offline versions, which never transmit data.*</p><ul><li><b>Opt-in only.</b> Connected features are off by default. Each one asks for</li></ul><p>  your separate, explicit consent \u2014 on its own consent screen, in plain</p><p>  language \u2014 before anything leaves your device. Declining never disables</p><p>  the app's offline features.</p><ul><li><b>What gets sent.</b> Only what the consent screen names, only when you use</li></ul><p>  the feature: for example, a meal description (text, or audio only if cloud</p><p>  transcription is on) for AI voice logging, or the single photo you choose</p><p>  for an AI Goal Preview.</p><ul><li><b>No retention by us.</b> Our relay service passes your request to the named</li></ul><p>  AI provider and keeps nothing \u2014 no copies of your photos, audio,</p><p>  transcripts, or entries are stored on our servers. Provider handling is</p><p>  described on the consent screen and in the Privacy Policy.</p><ul><li><b>Health data stays on the device.</b> Device sync (Health Connect) reads</li></ul><p>  your health data on your phone and stores it in the app on your phone. It</p><p>  is not uploaded to us.</p><ul><li><b>Allowances.</b> Some connected features run on third-party AI services we</li></ul><p>  pay for per use, so they may include a monthly allowance described in the</p><p>  app (for example, a set number of AI previews or voice entries per month),</p><p>  with optional additional credits. Allowances and pricing will be shown in</p><p>  the app before you use the feature; they are not a subscription unless the</p><p>  app says so in plain words.</p><ul><li><b>Permissions.</b> Connected features may request device permissions (such</li></ul><p>  as Health Connect access or the microphone) at the moment you first use</p><p>  them. You can revoke permissions any time in your device settings; the</p><p>  related feature will simply stop working.</p>";
+var LEGAL_DISCLAIMER_HTML = "<h3>Estimator Disclaimer \u2014 Contractor &amp; Trade Tools</h3><p>**Applies to: TreeBid Pro, SnowBid, WashPrice Pro, RoofSquares, JobProfit</p><p>Tracker, FieldForms Toolkit, PaintPro, FenceDeck, MarketMaker, and the other</p><p>estimating/pricing tools sold under White Wolf Digital \u2014 including bundles</p><p>that contain them.**</p><h4>Estimating aids, not finished quotes</h4><ul><li>These apps are <b>estimating and record-keeping aids</b>. Every bid, price,</li></ul><p>  cost, measurement, and total they produce is an **estimate based on the</p><p>  information and rates you enter**.</p><ul><li>**You \u2014 the business owner \u2014 are responsible for verifying everything</li></ul><p>  before you quote a customer:** measurements and quantities, site</p><p>  conditions, your current material and labor costs, your rates and margins,</p><p>  taxes, permit and license requirements, disposal rules, and any contract</p><p>  terms.</p><ul><li>Default rates, presets, and sample data included in the apps are starting</li></ul><p>  points only. They are not market prices, not industry standards, and not</p><p>  a recommendation of what you should charge.</p><ul><li>A saved quote keeps the prices in effect when you created it (price</li></ul><p>  snapshot). Changing your presets later does not change saved quotes \u2014</p><p>  and a saved quote is still your responsibility to review before sending.</p><h4>Specific tools</h4><ul><li><b>TreeBid Pro:</b> tree work is dangerous and site-specific. Difficulty</li></ul><p>  factors and presets cannot see the actual tree, lean, rot, targets, or</p><p>  access. Inspect every job in person before final pricing. The \"Invoice</p><p>  with Wave\" feature is an open-and-paste handoff \u2014 TreeBid does not</p><p>  connect to Wave, and the invoice you send from Wave is yours.</p><ul><li><b>RoofSquares / measurement tools:</b> confirm roof measurements and pitch</li></ul><p>  in person or by your usual method before ordering materials.</p><ul><li><b>SnowBid / seasonal tools:</b> route times, snowfall amounts, and service</li></ul><p>  pricing vary by storm and site; seasonal contracts are your agreement</p><p>  with your customer, on your terms.</p><ul><li><b>JobProfit Tracker:</b> profit figures depend on the costs you enter.</li></ul><p>  The app is not accounting or tax software and does not replace your</p><p>  bookkeeper or accountant.</p><h4>Bottom line</h4><p>If an output and your judgment disagree, trust your judgment \u2014 then fix the</p><p>input. We are not responsible for jobs won, lost, or mispriced based on app</p><p>outputs, within the limits of the Terms of Use.</p>";
+(function(){
+  var lst = document.createElement("style");
+  lst.textContent = "@media print{ #legalOverlay{ display:none !important; } }";
+  document.head.appendChild(lst);
+})();
+function sanitizeLegal(v){
+  if(!v || typeof v !== "object") return null;
+  if(typeof v.termsVersion !== "string" || typeof v.acceptedDate !== "string") return null;
+  return { termsVersion: v.termsVersion.slice(0, 10), acceptedDate: v.acceptedDate.slice(0, 40), disclaimerShown: !!v.disclaimerShown };
+}
+function legalRecord(){
+  try{ var s = state; return (s && s.legal) ? sanitizeLegal(s.legal) : null; }catch(e){ return null; }
+}
+function legalVersionCmp(a, b){
+  var pa = String(a).split("."), pb = String(b).split(".");
+  for(var i = 0; i < 3; i++){ var d = (parseInt(pa[i], 10) || 0) - (parseInt(pb[i], 10) || 0); if(d) return d; }
+  return 0;
+}
+function legalAcceptLine(){
+  var rec = legalRecord();
+  if(rec && rec.acceptedDate) return "You agreed to Terms v" + rec.termsVersion + " on " + rec.acceptedDate.slice(0, 10) + ".";
+  return "No Terms acceptance is recorded on this device yet \u2014 the current Terms will be shown for your agreement.";
+}
+function legalSectionHTML(){
+  var h = '<div style="border-top:2px solid rgba(127,127,127,.35);margin-top:20px;padding-top:14px;">'
+    + '<h2>Legal</h2>'
+    + '<p>' + legalAcceptLine() + '</p>'
+    + '<h3>Terms of Use (v' + TERMS_VERSION + ')</h3>'
+    + '<div style="max-height:340px;overflow-y:auto;border:1px solid rgba(127,127,127,.4);border-radius:8px;padding:10px 14px;font-size:14px;line-height:1.55;">' + LEGAL_TERMS_HTML + '</div>';
+  if(LEGAL_HAS_DISCLAIMER){
+    h += '<h3>Estimator Disclaimer</h3>'
+      + '<div style="max-height:260px;overflow-y:auto;border:1px solid rgba(127,127,127,.4);border-radius:8px;padding:10px 14px;font-size:14px;line-height:1.55;">' + LEGAL_DISCLAIMER_HTML + '</div>';
+  }
+  h += '<h3>Privacy</h3>'
+    + '<p>This app collects no data. It has no accounts, no sign-in, no analytics, and no server \u2014 everything you enter is stored only on this device, in this browser\u2019s storage, and nothing is transmitted anywhere. Files you export (backups, quotes, prints) are under your control. You are responsible for backing up your records with the app\u2019s export tools.</p>'
+    + '<p>Sold by White Wolf Tree Service LLC (White Wolf Digital) \u2014 whitewolfoklahoma@gmail.com</p>'
+    + '</div>';
+  return h;
+}
+function legalFillSection(){
+  var el = document.getElementById("legalSection");
+  if(!el) return;
+  var sig = legalAcceptLine();
+  if(el.getAttribute("data-legal-filled") === sig) return;
+  el.innerHTML = legalSectionHTML(); el.setAttribute("data-legal-filled", sig);
+}
+function legalRefreshSection(){
+  var el = document.getElementById("legalSection");
+  if(el){ el.innerHTML = legalSectionHTML(); el.setAttribute("data-legal-filled", legalAcceptLine()); }
+}
+function legalShowOverlay(isUpdate){
+  if(document.getElementById("legalOverlay")) return;
+  var ov = document.createElement("div");
+  ov.id = "legalOverlay";
+  ov.setAttribute("style", "position:fixed;inset:0;z-index:99999;background:rgba(8,10,14,.74);overflow-y:auto;padding:20px 12px;display:flex;align-items:flex-start;justify-content:center;");
+  var discBtn = LEGAL_HAS_DISCLAIMER ? '<button type="button" id="legalReadDisc" style="min-height:44px;padding:10px 14px;border-radius:10px;border:1px solid #9aa4b2;background:#ffffff;color:#1c2733;font-size:15px;cursor:pointer;">Read the Estimator Disclaimer</button>' : '';
+  var checkLabel = LEGAL_HAS_DISCLAIMER ? "I have read the disclaimer and I agree to the Terms of Use" : "I have read and I agree to the Terms of Use";
+  ov.innerHTML = '<div style="background:#ffffff;color:#1c2733;max-width:560px;width:100%;border-radius:14px;padding:22px 20px;box-shadow:0 18px 50px rgba(0,0,0,.45);font-size:15px;line-height:1.55;">'
+    + '<h2 style="margin:0 0 6px;font-size:21px;">' + LEGAL_APP_NAME + ' \u2014 Terms of Use</h2>'
+    + (isUpdate ? '<p style="background:#fdf3d7;border:1px solid #e4cf8a;border-radius:8px;padding:8px 10px;"><b>Our terms were updated (v' + TERMS_VERSION + ').</b></p>' : '')
+    + '<p style="font-size:16px;"><b>Your data stays on your device.</b><br><b>Estimates are aids, not guarantees.</b><br><b>You\'re responsible for checking outputs before you rely on them.</b></p>'
+    + '<p>The full Terms' + (LEGAL_HAS_DISCLAIMER ? ' and Disclaimer are' : ' are') + ' one tap away, now and any time in Settings \u2192 Legal.</p>'
+    + '<div id="legalReader" style="display:none;max-height:44vh;overflow-y:auto;border:1px solid #d5dbe3;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px;"></div>'
+    + '<p style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" id="legalReadTerms" style="min-height:44px;padding:10px 14px;border-radius:10px;border:1px solid #9aa4b2;background:#ffffff;color:#1c2733;font-size:15px;cursor:pointer;">Read the full Terms</button>' + discBtn + '</p>'
+    + '<label style="display:flex;gap:10px;align-items:flex-start;margin:12px 0;cursor:pointer;"><input type="checkbox" id="legalCheck" style="width:22px;height:22px;min-width:22px;margin-top:1px;cursor:pointer;"><span>' + checkLabel + '</span></label>'
+    + '<button type="button" id="legalAgree" disabled style="min-height:52px;width:100%;border:0;border-radius:10px;background:#1f5fa8;color:#ffffff;font-size:17px;font-weight:700;cursor:pointer;opacity:.55;">I Agree</button>'
+    + '<p style="font-size:13px;color:#5a6675;margin-bottom:0;">Your records stay loaded behind this screen and are never deleted or locked, whether or not you agree now.</p>'
+    + '</div>';
+  document.body.appendChild(ov);
+  var reader = ov.querySelector("#legalReader");
+  var showing = "";
+  function toggleReader(kind){
+    if(showing === kind){ reader.style.display = "none"; showing = ""; return; }
+    reader.innerHTML = kind === "terms" ? LEGAL_TERMS_HTML : LEGAL_DISCLAIMER_HTML;
+    reader.style.display = "block"; showing = kind;
+    reader.scrollTop = 0;
+  }
+  ov.querySelector("#legalReadTerms").addEventListener("click", function(){ toggleReader("terms"); });
+  var db = ov.querySelector("#legalReadDisc");
+  if(db) db.addEventListener("click", function(){ toggleReader("disc"); });
+  var legalChk = ov.querySelector("#legalCheck");
+  var legalAgreeBtn = ov.querySelector("#legalAgree");
+  legalChk.addEventListener("change", function(){ legalAgreeBtn.disabled = !legalChk.checked; legalAgreeBtn.style.opacity = legalChk.checked ? "1" : ".55"; });
+  legalAgreeBtn.addEventListener("click", function(){
+    if(!legalChk.checked) return;
+    try{ state.legal = { termsVersion: TERMS_VERSION, acceptedDate: new Date().toISOString(), disclaimerShown: LEGAL_HAS_DISCLAIMER }; save(); }catch(e){}
+    if(ov.parentNode) ov.parentNode.removeChild(ov);
+    legalRefreshSection();
+  });
+}
+function legalInit(){
+  legalFillSection();
+  var rec = legalRecord();
+  if(rec && legalVersionCmp(rec.termsVersion, TERMS_VERSION) >= 0) return;
+  legalShowOverlay(!!rec);
+}
+if(typeof MutationObserver !== "undefined"){
+  var legalObs = new MutationObserver(function(){ legalFillSection(); });
+  legalObs.observe(document.documentElement, { childList: true, subtree: true });
+}
+if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){ setTimeout(legalInit, 30); });
+else setTimeout(legalInit, 30);
+
+</script>
+</body>
+</html>
